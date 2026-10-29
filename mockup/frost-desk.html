@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T04 Frost Desk — every page blurs into the next</title>
+<link rel="stylesheet" href="_shared/nocturne.css">
+<style>
+  #stage{background:#06070B}
+  #stage.grid::before{opacity:.6}
+
+  /* the one moving background */
+  .scene{position:absolute;inset:0;z-index:-1;overflow:hidden}
+  .blob{position:absolute;left:0;top:0;border-radius:50%;will-change:transform;mix-blend-mode:screen}
+  .b1{width:820px;height:820px;margin:-410px;background:radial-gradient(closest-side,rgba(124,108,255,.95),rgba(124,108,255,.55) 38%,rgba(124,108,255,.16) 70%,rgba(124,108,255,0))}
+  .b2{width:700px;height:700px;margin:-350px;background:radial-gradient(closest-side,rgba(63,224,208,.85),rgba(63,224,208,.42) 40%,rgba(63,224,208,.1) 72%,rgba(63,224,208,0))}
+  .b3{width:560px;height:560px;margin:-280px;background:radial-gradient(closest-side,rgba(166,155,255,.75),rgba(106,90,249,.35) 45%,rgba(106,90,249,0))}
+  .b4{width:420px;height:420px;margin:-210px;background:radial-gradient(closest-side,rgba(63,224,208,.7),rgba(63,224,208,.2) 55%,rgba(63,224,208,0))}
+  .b5{width:150px;height:150px;margin:-75px;background:radial-gradient(closest-side,rgba(201,194,255,1),rgba(124,108,255,.9) 55%,rgba(124,108,255,0) 100%)}
+  .b6{width:110px;height:110px;margin:-55px;background:radial-gradient(closest-side,rgba(180,255,247,1),rgba(63,224,208,.9) 55%,rgba(63,224,208,0) 100%)}
+
+  /* glass panel */
+  .panel{position:absolute;left:120px;top:70px;width:1200px;height:760px;border-radius:30px;z-index:2;overflow:hidden;
+    background:linear-gradient(160deg,rgba(26,28,42,.52),rgba(10,11,18,.62));
+    -webkit-backdrop-filter:blur(42px) saturate(150%);backdrop-filter:blur(42px) saturate(150%);
+    box-shadow:0 0 0 1px rgba(255,255,255,.14) inset,0 1px 0 rgba(255,255,255,.22) inset,0 60px 140px -40px rgba(0,0,0,.85)}
+  .panel::after{content:"";position:absolute;inset:0;border-radius:30px;pointer-events:none;
+    background:linear-gradient(115deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,0) 30%)}
+
+  /* sidebar */
+  .side{position:absolute;left:0;top:0;bottom:0;width:112px;border-right:1px solid rgba(255,255,255,.09);background:rgba(8,9,14,.25)}
+  .logo{position:absolute;left:32px;top:34px;width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(140deg,var(--pulse),#4B3FD1);box-shadow:0 8px 24px -6px rgba(124,108,255,.8),0 0 0 1px rgba(255,255,255,.2) inset}
+  .nav{position:absolute;left:24px;top:150px;width:64px}
+  .nb{position:relative;display:flex;align-items:center;justify-content:center;width:64px;height:64px;margin-bottom:20px;border-radius:18px;color:rgba(242,243,247,.62);z-index:1;transition:color .3s;outline:none}
+  .nb svg{width:28px;height:28px}
+  .nb.on{color:#fff}
+  .nb.li-hover:not(.on),.nb:hover:not(.on){color:#fff;background:rgba(255,255,255,.06)}
+  .nb:focus-visible{box-shadow:0 0 0 2px var(--pulse-soft)}
+  .pill{position:absolute;left:0;top:0;width:64px;height:64px;border-radius:18px;z-index:0;transition:transform .5s var(--ease-back);
+    background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.11));box-shadow:0 0 0 1px rgba(255,255,255,.22) inset,0 10px 30px -8px rgba(124,108,255,.7)}
+  .pill::before{content:"";position:absolute;left:-24px;top:18px;width:4px;height:28px;border-radius:0 4px 4px 0;background:var(--pulse);box-shadow:0 0 14px var(--pulse)}
+  .me{position:absolute;left:32px;bottom:34px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:600 17px var(--f-text);
+    background:linear-gradient(140deg,#2C2F45,#1A1C2A);box-shadow:0 0 0 2px rgba(63,224,208,.65)}
+
+  /* content */
+  .content{position:absolute;left:112px;top:0;right:0;bottom:0;will-change:filter,opacity,transform}
+  .page{position:absolute;left:48px;top:44px;right:48px;bottom:44px;display:none}
+  .page.on{display:block}
+  .kick{font:500 14px var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:rgba(242,243,247,.7)}
+  h1{margin:10px 0 0;font:600 50px/1.05 var(--f-text);letter-spacing:-.025em;color:#fff;text-shadow:0 2px 24px rgba(0,0,0,.35)}
+  h1 em{font-style:normal;color:var(--pulse-pale)}
+  .chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;font:600 15px var(--f-text);background:rgba(63,224,208,.16);color:var(--ion);box-shadow:0 0 0 1px rgba(63,224,208,.3) inset}
+
+  .g{position:absolute;border-radius:22px;padding:28px 30px;
+    background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.11));
+    box-shadow:0 0 0 1px rgba(255,255,255,.16) inset,0 1px 0 rgba(255,255,255,.22) inset,0 24px 50px -24px rgba(0,0,0,.6)}
+  .g .lbl{font:500 14px var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:rgba(242,243,247,.78)}
+  .big{font:600 112px/1 var(--f-display);letter-spacing:-.01em;color:#fff;font-variant-numeric:tabular-nums}
+  .mid{font:600 56px/1 var(--f-display);color:#fff}
+  .muted{color:rgba(242,243,247,.74);font-size:18px}
+
+  /* overview */
+  .bars{position:absolute;left:30px;right:30px;bottom:26px;height:200px;display:flex;align-items:flex-end;gap:16px}
+  .bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:10px;height:100%;justify-content:flex-end}
+  .bar i{display:block;width:100%;border-radius:10px;background:linear-gradient(180deg,#A69BFF,var(--pulse));box-shadow:0 0 22px -4px rgba(124,108,255,.8);transform-origin:50% 100%;transform:scaleY(0)}
+  .bar.hi i{background:linear-gradient(180deg,#9BF5EC,var(--ion));box-shadow:0 0 22px -4px rgba(63,224,208,.9)}
+  .bar span{font:500 13px var(--f-mono);letter-spacing:.08em;color:rgba(242,243,247,.7)}
+  .plist{margin-top:22px;display:flex;flex-direction:column;gap:14px}
+  .plist div{display:flex;align-items:center;gap:12px;font:600 22px var(--f-display);letter-spacing:.06em}
+  .plist i{width:10px;height:10px;border-radius:50%;background:var(--pulse)}
+  .plist span{margin-left:auto;font:500 18px var(--f-text);letter-spacing:0;color:rgba(242,243,247,.8)}
+
+  /* projects */
+  .pc{width:230px;height:470px;top:120px;text-align:center;padding:30px 20px}
+  .pc .code{font:700 40px/1 var(--f-display);letter-spacing:.08em;color:#fff}
+  .pc .nm{margin-top:8px;font:500 17px var(--f-text);color:rgba(242,243,247,.78)}
+  .ring{position:relative;width:164px;height:164px;margin:34px auto 0}
+  .ring svg{width:164px;height:164px;transform:rotate(-90deg)}
+  .ring .v{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:600 46px var(--f-display);color:#fff}
+  .ring .v small{font-size:22px;margin-left:2px;color:rgba(242,243,247,.8)}
+  .pc .due{position:absolute;left:20px;right:20px;bottom:30px;font:500 14px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:rgba(242,243,247,.72)}
+  .pc .who{position:absolute;left:0;right:0;bottom:70px;display:flex;justify-content:center}
+  .pc .who b{width:36px;height:36px;margin:0 -5px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:600 14px var(--f-text);background:#2A2D42;box-shadow:0 0 0 2px rgba(20,21,32,.9)}
+
+  /* reports */
+  .chart path.ln{fill:none;stroke:var(--pulse-soft);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 8px rgba(124,108,255,.8))}
+  .legend{margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:12px 18px}
+  .legend div{display:flex;align-items:center;gap:10px;font:500 17px var(--f-text);color:rgba(242,243,247,.86)}
+  .legend i{width:12px;height:12px;border-radius:4px}
+
+  /* payoff: the line lands -> light blooms through the glass and a glint sweeps across it */
+  .glint{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;border-radius:30px;
+    background:linear-gradient(105deg,transparent 32%,rgba(255,255,255,.16) 42%,rgba(255,255,255,.42) 48%,rgba(226,222,255,.62) 50%,rgba(255,255,255,.42) 52%,rgba(255,255,255,.16) 58%,transparent 68%) no-repeat;background-size:260% 100%}
+  .bloom{position:absolute;left:823px;top:508px;width:2600px;height:2600px;margin:-1300px 0 0 -1300px;border-radius:50%;z-index:3;pointer-events:none;opacity:0;mix-blend-mode:screen;will-change:transform,opacity;
+    background:radial-gradient(closest-side,rgba(226,222,255,.92),rgba(166,155,255,.58) 16%,rgba(124,108,255,.30) 42%,rgba(63,224,208,.12) 68%,rgba(63,224,208,0))}
+  /* settings */
+  .fl{display:block;margin-top:22px}
+  .fl span{display:block;margin-bottom:10px;font:500 13px var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:rgba(242,243,247,.74)}
+  .fl .field{width:100%;background:rgba(8,9,14,.32);border-color:rgba(255,255,255,.2);font-size:20px}
+  .tg{display:flex;align-items:center;justify-content:space-between;height:64px;border-bottom:1px solid rgba(255,255,255,.1);font:500 20px var(--f-text)}
+  .tg:last-of-type{border:0}
+  .sw{width:56px;height:32px;border-radius:999px;background:rgba(255,255,255,.18);position:relative;transition:background .25s}
+  .sw::after{content:"";position:absolute;left:4px;top:4px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .3s var(--ease-back)}
+  .sw.on{background:var(--pulse-btn)}.sw.on::after{transform:translateX(24px)}
+  .av{display:flex;margin-top:22px}
+  .av b{width:58px;height:58px;margin-right:-12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:600 20px var(--f-text);box-shadow:0 0 0 3px rgba(30,32,48,.95)}
+</style>
+</head>
+<body>
+<div id="stage" class="grid" data-title="T04 Frost Desk" data-url="veraetogrex-portfolio.github.io/desk">
+  <div class="scene" id="scene">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div><div class="blob b5"></div><div class="blob b6"></div>
+  </div>
+
+  <div class="panel" id="panel">
+    <aside class="side">
+      <div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M5 5v14h14"/><path d="M10 14l3-4 3 2 3-5"/></svg></div>
+      <nav class="nav" id="nav">
+        <div class="pill" id="pill"></div>
+        <button class="nb" aria-label="Overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="9" rx="2"/><rect x="13.5" y="3.5" width="7" height="5" rx="2"/><rect x="3.5" y="15.5" width="7" height="5" rx="2"/><rect x="13.5" y="11.5" width="7" height="9" rx="2"/></svg></button>
+        <button class="nb" aria-label="Projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg></button>
+        <button class="nb" aria-label="Reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5h16"/><path d="M5 15l4.5-4.5 3.5 3 6-6.5"/><path d="M15 7h4v4"/></svg></button>
+        <button class="nb" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3L5.5 5.5"/></svg></button>
+      </nav>
+      <div class="me">M</div>
+    </aside>
+
+    <div class="content" id="content">
+      <!-- Overview -->
+      <section class="page" data-p="0">
+        <div class="kick">Monday · 26 Oct · Veraetogrex</div>
+        <h1>Good evening, <em>Mira</em></h1>
+        <div class="g" style="left:0;top:132px;width:412px;height:330px">
+          <div class="lbl">Tasks closed</div>
+          <div class="big" id="count" style="margin-top:34px">0</div>
+          <div style="margin-top:34px;display:flex;align-items:center;gap:14px"><span class="chip">▲ 12%</span><span class="muted">vs last week</span></div>
+        </div>
+        <div class="g" style="left:436px;top:132px;width:320px;height:330px">
+          <div class="lbl">This week</div>
+          <div class="bars" id="bars"></div>
+        </div>
+        <div class="g" style="left:780px;top:132px;width:212px;height:330px">
+          <div class="lbl">Projects</div>
+          <div class="plist"><div><i></i>ATL<span>84%</span></div><div><i></i>NWD<span>62%</span></div><div><i></i>HLO<span>47%</span></div><div><i></i>ORB<span>31%</span></div></div>
+        </div>
+        <div class="g" style="left:0;top:486px;width:592px;height:186px">
+          <div class="lbl">Next up · 14:30</div>
+          <div style="margin-top:20px;font:600 34px var(--f-text);letter-spacing:-.01em">Design review with Sana</div>
+          <div class="muted" style="margin-top:10px">NWD · onboarding flow · 30 min</div>
+        </div>
+        <div class="g" style="left:616px;top:486px;width:376px;height:186px">
+          <div class="lbl">Focus time left</div>
+          <div class="mid" style="margin-top:22px">3.5<span style="font-size:28px;color:rgba(242,243,247,.8)"> h</span></div>
+          <div class="muted" style="margin-top:10px">until 18:00</div>
+        </div>
+      </section>
+
+      <!-- Projects -->
+      <section class="page" data-p="1">
+        <div class="kick">4 active · Q4</div>
+        <h1>Projects</h1>
+        <div id="pcs"></div>
+      </section>
+
+      <!-- Reports -->
+      <section class="page" data-p="2">
+        <div class="kick">Last 30 days</div>
+        <h1>Reports</h1>
+        <div class="g" style="left:0;top:132px;width:600px;height:540px">
+          <div class="lbl">Team velocity</div>
+          <div style="display:flex;align-items:baseline;gap:16px;margin-top:16px"><span class="mid">+18.4%</span><span class="chip">On track</span></div>
+          <svg class="chart" id="chart" width="540" height="314" viewBox="0 0 568 330" style="position:absolute;left:30px;bottom:30px">
+            <defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7C6CFF" stop-opacity=".45"/><stop offset="1" stop-color="#7C6CFF" stop-opacity="0"/></linearGradient></defs>
+            <g stroke="rgba(255,255,255,.12)" stroke-width="1"><path d="M0 40H568M0 120H568M0 200H568M0 280H568"/></g>
+            <path id="areaP" fill="url(#area)" opacity="0"/>
+            <path id="lineP" class="ln" pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="1"/>
+            <circle id="endDot" r="9" fill="#fff" stroke="#7C6CFF" stroke-width="5" opacity="0"/>
+            <g font-family="Geist Mono" font-size="13" fill="rgba(242,243,247,.7)" letter-spacing="1"><text x="0" y="322">W1</text><text x="182" y="322">W2</text><text x="364" y="322">W3</text><text x="540" y="322">W4</text></g>
+          </svg>
+        </div>
+        <div class="g" style="left:624px;top:132px;width:368px;height:540px">
+          <div class="lbl">Where time went</div>
+          <div style="position:relative;width:240px;height:240px;margin:26px auto 0">
+            <svg id="donut" width="240" height="240" viewBox="0 0 240 240" style="transform:rotate(-90deg)">
+              <circle cx="120" cy="120" r="94" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="30"/>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <div class="mid" id="dnum">0</div><div class="muted" style="font-size:16px;margin-top:6px">hours logged</div>
+            </div>
+          </div>
+          <div class="legend"><div><i style="background:#7C6CFF"></i>Build 38%</div><div><i style="background:#3FE0D0"></i>Design 27%</div><div><i style="background:#C9C2FF"></i>Review 21%</div><div><i style="background:rgba(255,255,255,.45)"></i>QA 14%</div></div>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section class="page" data-p="3">
+        <div class="kick">Workspace</div>
+        <h1>Settings</h1>
+        <div class="g sf" style="left:0;top:132px;width:600px;height:540px">
+          <div class="lbl">General</div>
+          <label class="fl"><span>Workspace name</span><input class="field" value="Veraetogrex"></label>
+          <label class="fl"><span>Owner email</span><input class="field" value="mira@veraetogrex.dev"></label>
+          <div style="margin-top:20px">
+            <div class="tg">Frosted glass theme<button class="sw on" aria-label="Frosted glass theme"></button></div>
+            <div class="tg">Weekly digest<button class="sw on" aria-label="Weekly digest"></button></div>
+            <div class="tg">Sound on release<button class="sw" aria-label="Sound on release"></button></div>
+          </div>
+        </div>
+        <div class="g sf" style="left:624px;top:132px;width:368px;height:540px">
+          <div class="lbl">Members</div>
+          <div class="mid" style="margin-top:20px">18</div>
+          <div class="av"><b style="background:#6A5AF9">M</b><b style="background:#1F8F86">L</b><b style="background:#3A3D58">S</b><b style="background:#4B3FD1">A</b><b style="background:#262938;font-size:16px">+14</b></div>
+          <div class="muted" style="margin-top:26px">3 invites pending</div>
+          <button class="btn" style="position:absolute;left:30px;right:30px;bottom:30px;height:60px;font-size:19px">Save changes</button>
+        </div>
+      </section>
+    </div>
+    <div class="glint" id="glint"></div>
+  </div>
+  <div class="bloom" id="bloom"></div>
+
+  <div class="status-line"><span>Veraetogrex · T04</span><span>Frost desk</span></div>
+</div>
+
+<script src="_shared/stage.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const pages = $$('.page'), nbs = $$('.nb'), content = $('#content'), pill = $('#pill');
+const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const LOOP = 6300;   // demo length == background period => seamless loop
+
+// ---- background: periodic drift, period = LOOP ----
+const blobs = $$('.blob');
+const ORB = [ // cx, cy, ax, ay, kx, ky, phase
+  [430, 300, 160, 90, 1, 1, 0], [1060, 640, 150, 110, 1, 1, 2.1], [980, 220, 120, 80, 1, 2, 4.0],
+  [360, 720, 110, 70, 2, 1, 1.2], [250, 160, 70, 50, 1, 1, 3.3], [1250, 420, 60, 90, 1, 1, .7]];
+let bgT0 = performance.now();
+function bg(now) {
+  const th = ((now - bgT0) / LOOP) * Math.PI * 2;
+  blobs.forEach((b, i) => { const [cx, cy, ax, ay, kx, ky, ph] = ORB[i];
+    b.style.transform = `translate(${cx + ax * Math.sin(th * kx + ph)}px,${cy + ay * Math.cos(th * ky + ph)}px)`; });
+  requestAnimationFrame(bg);
+}
+requestAnimationFrame(bg);
+
+// ---- build dynamic bits ----
+const DAYS = [['Mon', .52], ['Tue', .74], ['Wed', .61], ['Thu', .93, 1], ['Fri', .8], ['Sat', .3], ['Sun', .22]];
+$('#bars').innerHTML = DAYS.map(([d, , hi]) => `<div class="bar${hi ? ' hi' : ''}"><i></i><span>${d}</span></div>`).join('');
+const barEls = $$('#bars .bar i');
+barEls.forEach((b, i) => b.style.height = (DAYS[i][1] * 150) + 'px');
+
+const PROJ = [['ATL', 'Atlas · web app', 84, 'Due Nov 14', ['L', 'M']], ['NWD', 'Northwind · mobile', 62, 'Due Nov 28', ['S', 'A', 'M']], ['HLO', 'Halo · design system', 47, 'Due Dec 05', ['M', 'L']], ['ORB', 'Orbit · platform', 31, 'Due Dec 19', ['A', 'S']]];
+$('#pcs').innerHTML = PROJ.map(([c, n, v, due, who], i) => `<div class="g pc" style="left:${i * 254}px">
+  <div class="code">${c}</div><div class="nm">${n}</div>
+  <div class="ring"><svg viewBox="0 0 164 164"><circle cx="82" cy="82" r="66" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="14"/>
+  <circle class="rv" cx="82" cy="82" r="66" fill="none" stroke="${v >= 80 ? '#3FE0D0' : '#7C6CFF'}" stroke-width="14" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" style="filter:drop-shadow(0 0 6px ${v >= 80 ? 'rgba(63,224,208,.8)' : 'rgba(124,108,255,.8)'})"/></svg>
+  <div class="v"><span class="rn">0</span><small>%</small></div></div>
+  <div class="who">${who.map(w => `<b>${w}</b>`).join('')}</div><div class="due">${due}</div></div>`).join('');
+const rings = $$('.pc .rv'), rnums = $$('.pc .rn');
+
+// line chart
+const PTS = [[0, 250], [60, 236], [120, 246], [182, 200], [240, 214], [300, 168], [364, 176], [420, 128], [480, 112], [540, 70]];
+function smooth(p) { let d = `M${p[0][0]},${p[0][1]}`; for (let i = 1; i < p.length; i++) { const [x0, y0] = p[i - 1], [x1, y1] = p[i], mx = (x0 + x1) / 2; d += `C${mx},${y0} ${mx},${y1} ${x1},${y1}`; } return d; }
+const lineD = smooth(PTS);
+$('#lineP').setAttribute('d', lineD);
+$('#areaP').setAttribute('d', lineD + 'L540,300L0,300Z');
+const endDot = $('#endDot'); endDot.setAttribute('cx', 540); endDot.setAttribute('cy', 70);
+// donut
+const SEG = [['#7C6CFF', 38], ['#3FE0D0', 27], ['#C9C2FF', 21], ['rgba(255,255,255,.45)', 14]];
+const segEls = SEG.map(([c]) => { const e = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  Object.entries({ cx: 120, cy: 120, r: 94, fill: 'none', stroke: c, 'stroke-width': 30, pathLength: 100 }).forEach(([k, v]) => e.setAttribute(k, v));
+  $('#donut').appendChild(e); return e; });
+
+// ---- page state ----
+let cur = 0, busy = false, wanted = null, quietOnce = false;
+function show(i) { pages.forEach((p, k) => p.classList.toggle('on', k === i)); }
+function markNav(i) { nbs.forEach((b, k) => b.classList.toggle('on', k === i)); pill.style.transform = `translateY(${i * 84}px)`; }
+function clearPage(i) {
+  if (i === 0) { $('#count').textContent = '0'; barEls.forEach(b => b.style.transform = 'scaleY(0)'); }
+  if (i === 1) { rings.forEach(r => r.setAttribute('stroke-dasharray', '0 100')); rnums.forEach(n => n.textContent = '0'); }
+  if (i === 2) { $('#lineP').setAttribute('stroke-dashoffset', 1); $('#areaP').setAttribute('opacity', 0); endDot.setAttribute('opacity', 0);
+    segEls.forEach(e => { e.setAttribute('stroke-dasharray', '0 100'); e.setAttribute('stroke-dashoffset', 0); }); $('#dnum').textContent = '0'; }
+}
+
+// page enter animations (count-ups, bars, rings, chart)
+async function enter(s, i) {
+  if (i === 0) {
+    const cnt = $('#count');
+    barEls.forEach((b, k) => s.later(() => s.tween(420, t => b.style.transform = `scaleY(${t})`, s.ease.outBack).catch(() => {}), 60 + k * 120));
+    await s.tween(920, t => cnt.textContent = fmt(Math.round(1284 * t)), s.ease.out);
+  }
+  if (i === 1) {
+    rings.forEach((r, k) => s.later(() => s.tween(900, t => { const v = PROJ[k][2] * t; r.setAttribute('stroke-dasharray', `${v} 100`); rnums[k].textContent = Math.round(v); }, s.ease.out).catch(() => {}), k * 110));
+    await s.wait(1230);
+  }
+  if (i === 2) {
+    const ln = $('#lineP'), ar = $('#areaP');
+    let acc = 0;
+    SEG.forEach(([, v], k) => { const off = acc; acc += v;
+      s.later(() => s.tween(420, t => { segEls[k].setAttribute('stroke-dasharray', `${Math.max(0, v * t - .8)} 100`); segEls[k].setAttribute('stroke-dashoffset', -off); }, s.ease.out).catch(() => {}), 200 + k * 170); });
+    s.tween(1000, t => $('#dnum').textContent = Math.round(312 * t), s.ease.out).catch(() => {});
+    await s.tween(900, t => { ln.setAttribute('stroke-dashoffset', 1 - t); ar.setAttribute('opacity', t * t); }, s.ease.inOut);
+    endDot.setAttribute('opacity', 1);
+    payoff(s);
+    await s.tween(220, t => endDot.setAttribute('r', 4 + 5 * s.ease.outBack(t)));
+  }
+  if (i === 3) {
+    $$('.page[data-p="3"] .fl, .page[data-p="3"] .tg').forEach((e, k) => e.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: k * 70, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' }));
+    await s.wait(700);
+  }
+}
+
+// payoff: bloom from the end of the line + one glint across the glass
+function payoff(s) {
+  const bloom = $('#bloom'), glint = $('#glint');
+  s.tween(1000, (t, p) => {
+    bloom.style.transform = `scale(${.06 + .94 * t})`;
+    bloom.style.opacity = p < .1 ? p / .1 : 1 - Math.pow((p - .1) / .9, 1.5);
+  }, s.ease.out).catch(() => {});
+  s.tween(720, (t, p) => {
+    glint.style.backgroundPosition = `${100 - 100 * t}% 0`;
+    glint.style.opacity = p < .85 ? 1 : (1 - p) / .15;
+  }, s.ease.inOut).catch(() => {});
+}
+
+// blur-out -> swap -> blur-in
+async function go(s, i) {
+  if (i === cur) return;
+  if (busy) { wanted = i; return; }
+  busy = true; markNav(i);
+  await s.tween(380, t => {
+    content.style.filter = `blur(${t * 26}px)`; content.style.opacity = 1 - t; content.style.transform = `scale(${1 - .02 * t})`;
+  }, s.ease.in);
+  show(i); clearPage(i); cur = i;
+  // the demo's last hop lands on the untouched first frame; reset() then starts the count-up
+  const quiet = quietOnce; quietOnce = false;
+  const en = quiet ? Promise.resolve() : enter(s, i).catch(() => {});
+  await s.tween(380, t => {
+    content.style.filter = t < 1 ? `blur(${(1 - t) * 26}px)` : 'none'; content.style.opacity = t; content.style.transform = `scale(${1.02 - .02 * t})`;
+  }, s.ease.out);
+  content.style.filter = 'none'; content.style.transform = '';
+  busy = false;
+  if (wanted !== null && wanted !== cur) { const w = wanted; wanted = null; return go(s, w); }
+  wanted = null;
+  return en;
+}
+nbs.forEach((b, i) => b.addEventListener('click', () => go(Stage.ctx(), i)));
+addEventListener('keydown', e => { if (e.target.matches('input')) return; const n = +e.key; if (n >= 1 && n <= 4) go(Stage.ctx(), n - 1); });
+$$('.sw').forEach(sw => sw.addEventListener('click', () => sw.classList.toggle('on')));
+
+function reset(s) {
+  busy = false; wanted = null; cur = 0; quietOnce = false;
+  content.style.filter = 'none'; content.style.opacity = 1; content.style.transform = '';
+  $('#bloom').style.opacity = 0; $('#glint').style.opacity = 0;
+  [0, 1, 2].forEach(clearPage);
+  $$('.sw').forEach((sw, k) => sw.classList.toggle('on', k < 2));
+  show(0); markNav(0);
+  bgT0 = performance.now();
+  enter(s, 0).catch(() => {});        // Overview counts up from the first frame
+}
+
+const REST = [292, 236];
+Stage.init({
+  reset,
+  cursorStart: REST,
+  async demo(s) {
+    const t0 = performance.now();
+    await s.wait(420);
+    await s.click(nbs[1], { ms: 480 });                 // ≈1.0 s Projects
+    await s.until(t0, 2080);
+    await s.click(nbs[2], { ms: 420 });                 // ≈2.6 s Reports
+    await s.until(t0, 3900);
+    await s.click(nbs[3], { ms: 420 });                 // ≈4.2 s Settings
+    await s.until(t0, 5040);
+    quietOnce = true;
+    await s.click(nbs[0], { ms: 380, arc: .2 });        // ≈5.5 s back to Overview
+    s.move(REST, 560, { arc: -.15 }).catch(() => {});
+    await s.until(t0, LOOP);                            // blur-in finishes on the first frame
+  },
+});
+</script>
+</body>
+</html>

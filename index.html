@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Frost Desk — veraetogrex_portfolio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Frost Desk · zero dependencies · github.com/veraetogrex-portfolio -->
+  <div class="fd-scene" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+  <main class="fd" id="desk">
+    <aside class="fd-side">
+      <div class="fd-logo"></div>
+      <nav class="fd-nav" aria-label="Pages">
+        <span class="fd-pill"></span>
+        <button class="is-on" aria-label="Overview"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="9" rx="2"/><rect x="13.5" y="3.5" width="7" height="5" rx="2"/><rect x="3.5" y="15.5" width="7" height="5" rx="2"/><rect x="13.5" y="11.5" width="7" height="9" rx="2"/></svg></button>
+        <button aria-label="Projects"><svg viewBox="0 0 24 24"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg></button>
+        <button aria-label="Reports"><svg viewBox="0 0 24 24"><path d="M4 19.5h16M5 15l4.5-4.5 3.5 3 6-6.5M15 7h4v4"/></svg></button>
+        <button aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3L5.5 5.5"/></svg></button>
+      </nav>
+      <div class="fd-me">M</div>
+    </aside>
+
+    <div class="fd-content">
+      <section class="fd-page is-on">
+        <p class="fd-kick">Monday · 26 Oct</p>
+        <h1>Good evening, <em>Mira</em></h1>
+        <div class="fd-grid fd-overview">
+          <div class="fd-card"><p class="fd-label">Tasks closed</p><p class="fd-big" data-count>0</p><p><span class="fd-chip">▲ 12%</span> <span class="fd-muted">vs last week</span></p></div>
+          <div class="fd-card"><p class="fd-label">This week</p><div class="fd-bars"></div></div>
+          <div class="fd-card fd-wide"><p class="fd-label">Next up · 14:30</p><p class="fd-next">Design review with Sana</p><p class="fd-muted">NWD · onboarding flow · 30 min</p></div>
+        </div>
+      </section>
+
+      <section class="fd-page">
+        <p class="fd-kick">4 active · Q4</p>
+        <h1>Projects</h1>
+        <div class="fd-grid fd-projects"></div>
+      </section>
+
+      <section class="fd-page">
+        <p class="fd-kick">Last 30 days</p>
+        <h1>Reports</h1>
+        <div class="fd-grid fd-reports">
+          <div class="fd-card">
+            <p class="fd-label">Team velocity</p><p class="fd-mid">+18.4% <span class="fd-chip">On track</span></p>
+            <svg class="fd-line" viewBox="0 0 568 330">
+              <defs><linearGradient id="fd-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c6cff" stop-opacity=".45"/><stop offset="1" stop-color="#7c6cff" stop-opacity="0"/></linearGradient></defs>
+              <path class="fd-grid-lines" d="M0 40H568M0 120H568M0 200H568M0 280H568"/>
+              <path class="fd-area" fill="url(#fd-area)"/>
+              <path class="fd-stroke" pathLength="1" stroke-dasharray="1 1"/>
+              <circle class="fd-dot" cx="540" cy="70" r="9"/>
+            </svg>
+          </div>
+          <div class="fd-card">
+            <p class="fd-label">Where time went</p>
+            <div class="fd-donut"><svg viewBox="0 0 240 240"><circle cx="120" cy="120" r="94"/></svg><p><b class="fd-mid" data-hours>0</b><span class="fd-muted">hours logged</span></p></div>
+            <p class="fd-muted">Build 38% · Design 27% · Review 21% · QA 14%</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="fd-page">
+        <p class="fd-kick">Workspace</p>
+        <h1>Settings</h1>
+        <form class="fd-card fd-form" onsubmit="return false">
+          <label class="fd-field"><span>Workspace name</span><input value="Veraetogrex"></label>
+          <label class="fd-field"><span>Owner email</span><input type="email" value="mira@veraetogrex.dev"></label>
+          <label class="fd-toggle">Frosted glass theme<input type="checkbox" checked></label>
+          <label class="fd-toggle">Weekly digest<input type="checkbox" checked></label>
+          <label class="fd-toggle">Sound on release<input type="checkbox"></label>
+          <button class="fd-save">Save changes</button>
+        </form>
+      </section>
+    </div>
+    <div class="fd-glint" aria-hidden="true"></div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
