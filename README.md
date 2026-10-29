@@ -2,7 +2,7 @@
 
 **Frosted glass dashboard — every page blurs into the next.**
 
-![Frost Desk preview](preview.jpg)
+![Frost Desk preview](preview.gif)
 
 **Live demo:** [veraetogrex-portfolio.github.io/frost-desk](https://veraetogrex-portfolio.github.io/frost-desk/) · **Mockup:** [full-screen version](https://veraetogrex-portfolio.github.io/frost-desk/mockup/frost-desk.html)
 
